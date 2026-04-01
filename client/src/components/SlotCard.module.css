@@ -1,0 +1,167 @@
+.card:not(:first-child) {
+    border-top: 1px solid var(--border);
+}
+
+.card {
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: background 0.15s;
+}
+
+.card.marked {
+    background: rgba(56, 189, 248, 0.06);
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.time {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.toggleBtn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.toggleBtn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.toggleBtn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.toggleActive {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f172a;
+}
+
+.toggleActive:hover {
+    background: var(--accent-dim);
+    border-color: var(--accent-dim);
+    color: var(--text);
+}
+
+.countBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 0;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.countBtn:hover {
+    color: var(--text);
+}
+
+.arrow {
+    font-size: 0.6rem;
+}
+
+.bubbleRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding-top: 0.2rem;
+}
+
+.bubble {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    overflow: visible;
+    cursor: default;
+    flex-shrink: 0;
+}
+
+.bubbleImg {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid var(--border);
+}
+
+.bubbleInitial {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.45rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.tooltip {
+    display: flex;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    z-index: 100;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.tooltipImg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.tooltipInitial {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.tooltipName {
+    font-size: 1.2rem;
+    color: var(--text);
+    font-weight: 600;
+}

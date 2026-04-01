@@ -1,0 +1,83 @@
+.calendar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    width: 100%;
+    min-width: 335px;
+    max-width: 400px;
+}
+
+@media (max-width: 900px) {
+    .calendar {
+        min-width: unset;
+        max-width: none;
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+
+.navBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+}
+
+.navBtn:hover {
+    color: var(--text);
+    background: var(--surface2);
+}
+
+.monthLabel {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.dayHeader {
+    font-size: 1rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.2rem 0;
+    font-weight: 600;
+}
+
+.day {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 0.4rem 0;
+    border-radius: 6px;
+    line-height: 1;
+}
+
+.day:hover {
+    background: var(--surface2);
+}
+
+.day.today {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.day.selected {
+    background: var(--accent);
+    color: #0d1b2a;
+    font-weight: 700;
+}

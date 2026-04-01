@@ -1,0 +1,94 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+.card {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+}
+
+.label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.825rem;
+    color: var(--text-muted);
+}
+
+.input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.input:focus {
+    border-color: var(--accent);
+}
+
+.btn {
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+    transition: opacity 0.15s;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+}
+
+.btn:not(:disabled):hover {
+    opacity: 0.88;
+}
+
+.error {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.88rem;
+}
+
+.footer {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}

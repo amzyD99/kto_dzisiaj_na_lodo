@@ -1,0 +1,22 @@
+.container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    top: -1.5em;
+    color: #e2e8f0;
+    line-height: 1;
+    user-select: none;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    0%   { transform: translateY(-1.5em) translateX(0)            rotate(var(--rotation)); }
+    50%  { transform: translateY(50vh)   translateX(var(--drift)) rotate(calc(var(--rotation) + 180deg)); }
+    100% { transform: translateY(105vh)  translateX(0)            rotate(calc(var(--rotation) + 360deg)); }
+}

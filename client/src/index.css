@@ -1,0 +1,42 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #0d1b2a;
+    --surface: #162032;
+    --surface2: #1e2e42;
+    --border: #2e4a6a;
+    --accent: #c8e8f5;
+    --accent-dim: #4a8faf;
+    --text: #ddeef7;
+    --text-muted: #7aa3bc;
+    --danger: #d97070;
+    --success: #6bbfa0;
+    --radius: 8px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #0d1b2a 0%, #0f2540 40%, #112236 70%, #0d1b2a 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+input {
+    font-family: inherit;
+}

@@ -1,0 +1,191 @@
+.board {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    min-width: 280px;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.newBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.newBtn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.composer {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.empty {
+    padding: 1.5rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.item {
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+.content {
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.meta {
+    display: flex;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.edited {
+    font-style: italic;
+}
+
+.textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+}
+
+.textarea:focus {
+    border-color: var(--accent);
+}
+
+.itemActions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.saveBtn {
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 5px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+}
+
+.saveBtn:hover {
+    opacity: 0.85;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.78rem;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.cancelBtn:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+}
+
+.editBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.72rem;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.editBtn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.deleteBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.72rem;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.deleteBtn:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.error {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+}

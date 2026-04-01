@@ -1,0 +1,57 @@
+.column {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: visible;
+    width: 100%;
+    min-width: 335px;
+    max-width: 400px;
+}
+
+@media (max-width: 900px) {
+    .column {
+        min-width: unset;
+        max-width: none;
+    }
+}
+
+.column.today {
+    border-color: var(--accent);
+}
+
+.header {
+    background: var(--surface2);
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.today .header {
+    background: var(--accent-dim);
+}
+
+.dayName {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.today .dayName {
+    color: var(--accent);
+}
+
+.dayDate {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
