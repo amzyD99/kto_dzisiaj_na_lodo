@@ -1,11 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
 import styles from './ProfilePage.module.css';
 
+const COLOR_PALETTE = [
+    '#f87171', '#fb923c', '#17b11f', '#a3e635',
+    '#34d399', '#22d3ee', '#2b65ac', '#a78bfa',
+];
+
 export default function ProfilePage() {
-    const { user, updateAvatar, updateUser, attendanceCount, refreshCount, resetCount } = useAuth();
+    const { user, updateAvatar, updateUser, updateColor, attendanceCount, refreshCount, resetCount } = useAuth();
     const navigate = useNavigate();
     const fileRef = useRef(null);
 
@@ -17,6 +22,70 @@ export default function ProfilePage() {
     const [newPassword, setNewPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    const [messageColor, setMessageColor] = useState(user?.message_color || '#1e3f6b');
+    const [messageColor2, setMessageColor2] = useState(user?.message_color2 || user?.message_color || '#1e3f6b');
+    const [gradientEnabled, setGradientEnabled] = useState(
+        Boolean(user?.message_color2 && user.message_color2 !== user.message_color)
+    );
+    const [colorError, setColorError] = useState('');
+
+    const [regToken, setRegToken] = useState('');
+    const [regTokenSeconds, setRegTokenSeconds] = useState(null);
+
+    const fetchRegToken = useCallback(async () => {
+        try {
+            const { data } = await api.get('/auth/register-token');
+            setRegToken(data.token);
+            setRegTokenSeconds(data.secondsUntilRotation);
+        } catch {
+            // non-critical
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!user?.is_admin) return;
+        fetchRegToken();
+        const poll = setInterval(fetchRegToken, 15 * 60 * 1000);
+        return () => clearInterval(poll);
+    }, [user?.is_admin, fetchRegToken]);
+
+    // Local countdown tick — decrements every second, re-fetches when it reaches zero
+    useEffect(() => {
+        if (!user?.is_admin || regTokenSeconds === null) return;
+        if (regTokenSeconds <= 0) { fetchRegToken(); return; }
+        const id = setTimeout(() => setRegTokenSeconds(s => s - 1), 1000);
+        return () => clearTimeout(id);
+    }, [user?.is_admin, regTokenSeconds, fetchRegToken]);
+
+    async function saveColors(c1, c2) {
+        setColorError('');
+        try {
+            await api.put('/me/color', { color: c1, color2: c2 });
+            updateColor(c1, c2);
+        } catch (err) {
+            setColorError(err.response?.data?.error || 'Błąd zapisu koloru');
+        }
+    }
+
+    function handleColorSelect(color) {
+        setMessageColor(color);
+        saveColors(color, gradientEnabled ? messageColor2 : color);
+    }
+
+    function handleColor2Select(color) {
+        setMessageColor2(color);
+        saveColors(messageColor, color);
+    }
+
+    function handleGradientToggle(e) {
+        const on = e.target.checked;
+        setGradientEnabled(on);
+        if (!on) {
+            setMessageColor2(messageColor);
+            saveColors(messageColor, messageColor);
+        }
+    }
 
     useEffect(() => { refreshCount(); }, [refreshCount]);
 
@@ -92,6 +161,68 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={styles.card}>
+                    <h2 className={styles.sectionTitle}>Kolor wiadomości</h2>
+                    <div className={styles.colorPreview} style={{ background: gradientEnabled ? `linear-gradient(135deg, ${messageColor}, ${messageColor2})` : messageColor }}>
+                        <span style={{ color: '#e2e8f0', fontSize: '0.78rem', opacity: 0.85 }}>Podgląd</span>
+                    </div>
+                    <div className={styles.gradientSection}>
+                        <div>
+                            {gradientEnabled && <span className={styles.colorLabel}>Kolor 1</span>}
+                            <div className={styles.colorRow}>
+                                <div className={styles.palette}>
+                                    {COLOR_PALETTE.map((c) => (
+                                        <button
+                                            key={c}
+                                            className={`${styles.swatch} ${messageColor === c ? styles.swatchActive : ''}`}
+                                            style={{ background: c }}
+                                            onClick={() => handleColorSelect(c)}
+                                            aria-label={c}
+                                        />
+                                    ))}
+                                    <input
+                                        type="color"
+                                        className={styles.colorInput}
+                                        value={messageColor}
+                                        onChange={(e) => handleColorSelect(e.target.value)}
+                                        title="Własny kolor"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <label className={styles.checkboxRow}>
+                            <input type="checkbox" checked={gradientEnabled} onChange={handleGradientToggle} />
+                            <span>Gradient</span>
+                        </label>
+                        {gradientEnabled && (
+                            <div>
+                                <span className={styles.colorLabel}>Kolor 2</span>
+                                <div className={styles.colorRow}>
+                                    <div className={styles.palette}>
+                                        {COLOR_PALETTE.map((c) => (
+                                            <button
+                                                key={`c2-${c}`}
+                                                className={`${styles.swatch} ${messageColor2 === c ? styles.swatchActive : ''}`}
+                                                style={{ background: c }}
+                                                onClick={() => handleColor2Select(c)}
+                                                aria-label={c}
+                                            />
+                                        ))}
+                                        <input
+                                            type="color"
+                                            className={styles.colorInput}
+                                            value={messageColor2}
+                                            onChange={(e) => handleColor2Select(e.target.value)}
+                                            title="Własny kolor"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {colorError && <p className={styles.error}>{colorError}</p>}
+                </section>
+
+                <section className={styles.card}>
                     <h2 className={styles.sectionTitle}>Statystyki</h2>
                     <div className={styles.statsRow}>
                         <div className={styles.statBlock}>
@@ -101,6 +232,20 @@ export default function ProfilePage() {
                         <button className={styles.resetBtn} onClick={resetCount}>Zresetuj licznik</button>
                     </div>
                 </section>
+
+                {user?.is_admin && (
+                    <section className={styles.card}>
+                        <h2 className={styles.sectionTitle}>Token rejestracji</h2>
+                        <div className={styles.regTokenRow}>
+                            <span className={styles.regToken}>{regToken || '—'}</span>
+                            {regTokenSeconds !== null && (
+                                <span className={styles.regTokenExpiry}>
+                                    rotacja za {Math.floor(regTokenSeconds / 60)}:{String(regTokenSeconds % 60).padStart(2, '0')}
+                                </span>
+                            )}
+                        </div>
+                    </section>
+                )}
 
                 <section className={styles.card}>
                     <h2 className={styles.sectionTitle}>Zmień nazwę użytkownika</h2>

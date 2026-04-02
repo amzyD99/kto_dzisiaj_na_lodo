@@ -9,6 +9,7 @@ export default function RegisterPage() {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [registrationToken, setRegistrationToken] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -17,7 +18,7 @@ export default function RegisterPage() {
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/register', { username, password });
+            const { data } = await api.post('/auth/register', { username, password, registrationToken });
             login(data.token, data.user);
             navigate('/');
         } catch (err) {
@@ -54,6 +55,18 @@ export default function RegisterPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
+                    />
+                </label>
+                <label className={styles.label}>
+                    Token rejestracji
+                    <input
+                        className={styles.input}
+                        type="text"
+                        value={registrationToken}
+                        onChange={(e) => setRegistrationToken(e.target.value)}
+                        placeholder="Otrzymaj od administratora"
+                        required
+                        autoComplete="off"
                     />
                 </label>
                 <button className={styles.btn} type="submit" disabled={loading}>

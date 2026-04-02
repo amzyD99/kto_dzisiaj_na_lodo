@@ -13,6 +13,9 @@ import styles from './AttendanceChart.module.css';
 const MAX_ATTENDEES = 20;
 
 const SLOT_COLORS = {
+    '11:00': { top: '#f472b6', bottom: '#be185d' },
+    '12:30': { top: '#34d399', bottom: '#047857' },
+    '14:00': { top: '#fbbf24', bottom: '#b45309' },
     '15:30': { top: '#38bdf8', bottom: '#0369a1' },
     '17:00': { top: '#818cf8', bottom: '#4338ca' },
     '18:30': { top: '#fb923c', bottom: '#c2410c' },

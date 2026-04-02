@@ -36,7 +36,7 @@ router.get('/', (req, res) => {
         return res.status(400).json({ error: 'Parametry zapytania "from" i "to" są wymagane' });
     }
 
-    const slots = db.prepare('SELECT id, label FROM time_slots ORDER BY id').all();
+    const slots = db.prepare('SELECT id, label, weekend_only FROM time_slots ORDER BY label').all();
 
     // Retrieve every attendance row in the requested range, joined with the
     // attending user's username so a single query hydrates the full grid.

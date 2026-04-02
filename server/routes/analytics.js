@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
         LEFT JOIN attendances a ON a.slot_id = t.id
             AND strftime('%Y-%m', a.date) = ?
         GROUP BY t.id
-        ORDER BY t.id
+        ORDER BY t.label
     `).all(ym);
 
     const topUsers = db.prepare(`

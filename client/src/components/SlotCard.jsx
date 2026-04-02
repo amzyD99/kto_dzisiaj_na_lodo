@@ -10,6 +10,7 @@ function formatCount(n) {
 function UserBubble({ user }) {
     const [tooltipOpen, setTooltipOpen] = useState(false);
     const ref = useRef(null);
+    const [pos, setPos] = useState(null);
 
     useEffect(() => {
         if (!tooltipOpen) return;
@@ -26,6 +27,12 @@ function UserBubble({ user }) {
         };
     }, [tooltipOpen]);
 
+    useEffect(() => {
+        if (!tooltipOpen || !ref.current) { setPos(null); return; }
+        const rect = ref.current.getBoundingClientRect();
+        setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
+    }, [tooltipOpen]);
+
     return (
         <div
             ref={ref}
@@ -38,8 +45,11 @@ function UserBubble({ user }) {
                 ? <img className={styles.bubbleImg} src={`/uploads/${user.avatar}`} alt={user.username} />
                 : <span className={styles.bubbleInitial}>{user.username[0].toUpperCase()}</span>
             }
-            {tooltipOpen && (
-                <div className={styles.tooltip}>
+            {tooltipOpen && pos && (
+                <div
+                    className={styles.tooltip}
+                    style={{ position: 'fixed', top: pos.top, left: pos.left, transform: 'translate(-50%, -100%)' }}
+                >
                     {user.avatar
                         ? <img className={styles.tooltipImg} src={`/uploads/${user.avatar}`} alt={user.username} />
                         : <span className={styles.tooltipInitial}>{user.username[0].toUpperCase()}</span>

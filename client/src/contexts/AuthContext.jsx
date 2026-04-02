@@ -60,8 +60,16 @@ export function AuthProvider({ children }) {
         setUser(userData);
     }
 
+    function updateColor(color, color2) {
+        setUser((prev) => {
+            const updated = { ...prev, message_color: color, message_color2: color2 || color };
+            localStorage.setItem('user', JSON.stringify(updated));
+            return updated;
+        });
+    }
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateAvatar, updateUser, attendanceCount, refreshCount, resetCount }}>
+        <AuthContext.Provider value={{ user, login, logout, updateAvatar, updateUser, updateColor, attendanceCount, refreshCount, resetCount }}>
             {children}
         </AuthContext.Provider>
     );

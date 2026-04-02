@@ -13,6 +13,11 @@ function todayIso() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function isWeekend(dateStr) {
+    const day = new Date(dateStr + 'T00:00:00').getDay();
+    return day === 0 || day === 6;
+}
+
 export default function SchedulePage() {
     const { user, refreshCount } = useAuth();
     const [selectedDate, setSelectedDate] = useState(todayIso());
@@ -92,7 +97,7 @@ export default function SchedulePage() {
                         ) : (
                             <DayColumn
                                 date={selectedDate}
-                                slots={slots}
+                                slots={isWeekend(selectedDate) ? slots : slots.filter(s => !s.weekend_only)}
                                 attendanceMap={attendanceMap}
                                 currentUserId={user.id}
                                 onToggle={toggleAttendance}
@@ -101,7 +106,7 @@ export default function SchedulePage() {
                     </div>
                     <AttendanceChart
                         date={selectedDate}
-                        slots={slots}
+                        slots={isWeekend(selectedDate) ? slots : slots.filter(s => !s.weekend_only)}
                         attendanceMap={attendanceMap}
                     />
                 </aside>

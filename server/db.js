@@ -25,6 +25,10 @@ function addColumn(sql) {
 addColumn('ALTER TABLE users ADD COLUMN avatar TEXT');
 addColumn('ALTER TABLE users ADD COLUMN attendance_offset INTEGER NOT NULL DEFAULT 0');
 addColumn('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0');
+addColumn("ALTER TABLE users ADD COLUMN message_color TEXT NOT NULL DEFAULT '#1e3f6b'");
+addColumn("ALTER TABLE users ADD COLUMN message_color2 TEXT NOT NULL DEFAULT '#1e3f6b'");
+
+addColumn('ALTER TABLE time_slots ADD COLUMN weekend_only INTEGER NOT NULL DEFAULT 0');
 
 // Chat messages table
 db.exec(`
@@ -56,14 +60,28 @@ db.exec(`
 // Seed fixed time slots once
 const slotCount = db.prepare('SELECT COUNT(*) as n FROM time_slots').get().n;
 if (slotCount === 0) {
-    const insert = db.prepare('INSERT INTO time_slots (id, label) VALUES (?, ?)');
+    const insert = db.prepare('INSERT INTO time_slots (id, label, weekend_only) VALUES (?, ?, ?)');
     const seed = db.transaction(() => {
-        insert.run(1, '15:30');
-        insert.run(2, '17:00');
-        insert.run(3, '18:30');
-        insert.run(4, '20:00');
+        insert.run(1, '15:30', 0);
+        insert.run(2, '17:00', 0);
+        insert.run(3, '18:30', 0);
+        insert.run(4, '20:00', 0);
+        insert.run(5, '11:00', 1);
+        insert.run(6, '12:30', 1);
+        insert.run(7, '14:00', 1);
     });
     seed();
 }
+
+// Ensure weekend slots exist (idempotent for existing databases)
+const weekendSlots = [
+    [5, '11:00', 1],
+    [6, '12:30', 1],
+    [7, '14:00', 1],
+];
+const insertIfMissing = db.prepare(
+    'INSERT OR IGNORE INTO time_slots (id, label, weekend_only) VALUES (?, ?, ?)'
+);
+for (const s of weekendSlots) insertIfMissing.run(...s);
 
 module.exports = db;

@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
         // Paginate backwards: return 50 messages older than `before`, newest-first
         // then reverse so the feed renders in ascending order.
         rows = db.prepare(`
-            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar
+            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2
             FROM messages m
             JOIN users u ON u.id = m.user_id
             WHERE m.id < ?
@@ -26,7 +26,7 @@ router.get('/', (req, res) => {
         `).all(before).reverse();
     } else {
         rows = db.prepare(`
-            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar
+            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2
             FROM messages m
             JOIN users u ON u.id = m.user_id
             WHERE m.id > ?
@@ -50,11 +50,14 @@ router.post('/', (req, res) => {
         'INSERT INTO messages (user_id, content) VALUES (?, ?) RETURNING id, content, created_at'
     ).get(req.user.id, content.trim());
 
+    const sender = db.prepare('SELECT avatar, message_color, message_color2 FROM users WHERE id = ?').get(req.user.id);
     return res.status(201).json({
         ...row,
         user_id: req.user.id,
         username: req.user.username,
-        avatar: db.prepare('SELECT avatar FROM users WHERE id = ?').get(req.user.id)?.avatar || null,
+        avatar: sender?.avatar || null,
+        message_color: sender?.message_color || '#1e3f6b',
+        message_color2: sender?.message_color2 || sender?.message_color || '#1e3f6b',
     });
 });
 

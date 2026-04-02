@@ -30,7 +30,7 @@ function Message({ msg, isMine, isAdmin, onDelete }) {
             )}
             <div className={styles.bubble}>
                 {!isMine && <span className={styles.sender}>{msg.username}</span>}
-                <p className={styles.text}>{msg.content}</p>
+                <p className={styles.text} style={!isMine && msg.message_color ? { background: msg.message_color2 && msg.message_color2 !== msg.message_color ? `linear-gradient(135deg, ${msg.message_color}, ${msg.message_color2})` : msg.message_color } : undefined}>{msg.content}</p>
                 <div className={styles.msgMeta}>
                     <span className={styles.time}>{formatTime(msg.created_at)}</span>
                     {canDelete && !confirming && (

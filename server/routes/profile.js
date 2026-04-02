@@ -29,13 +29,29 @@ router.put('/username', (req, res) => {
             'UPDATE users SET username = ? WHERE id = ? RETURNING id, username, avatar, is_admin'
         ).get(username.trim(), req.user.id);
 
-        return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0 } });
+        const full = db.prepare('SELECT message_color, message_color2 FROM users WHERE id = ?').get(user.id);
+        return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0, message_color: full?.message_color || '#1e3f6b', message_color2: full?.message_color2 || full?.message_color || '#1e3f6b' } });
     } catch (err) {
         if (err.message.includes('UNIQUE')) {
             return res.status(409).json({ error: 'Nazwa użytkownika jest już zajęta' });
         }
         throw err;
     }
+});
+
+// PUT /api/me/color  { color, color2 }  — sets the user's chat bubble gradient
+router.put('/color', (req, res) => {
+    const { color, color2 } = req.body;
+    const hex = /^#[0-9a-fA-F]{6}$/;
+    if (!color || !hex.test(color)) {
+        return res.status(422).json({ error: 'Nieprawidłowy format koloru (wymagany #rrggbb)' });
+    }
+    if (color2 && !hex.test(color2)) {
+        return res.status(422).json({ error: 'Nieprawidłowy format drugiego koloru (wymagany #rrggbb)' });
+    }
+    const c2 = color2 || color;
+    db.prepare('UPDATE users SET message_color = ?, message_color2 = ? WHERE id = ?').run(color, c2, req.user.id);
+    return res.json({ color, color2: c2 });
 });
 
 // PUT /api/me/password  { currentPassword, newPassword }
