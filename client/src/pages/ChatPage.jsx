@@ -13,52 +13,268 @@ function formatDay(iso) {
     return new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
 }
 
-function Message({ msg, isMine, isAdmin, onDelete }) {
+// Returns a contrasting text color (dark or light) for a given hex background.
+// Uses the sRGB relative luminance formula (ITU-R BT.709 coefficients).
+function contrastText(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return L > 0.45 ? '#0f172a' : '#e2e8f0';
+}
+
+function bubbleStyle(msg) {
+    if (!msg.message_color) return undefined;
+    const hasGradient = msg.message_color2 && msg.message_color2 !== msg.message_color;
+    const bg = hasGradient
+        ? `linear-gradient(135deg, ${msg.message_color}, ${msg.message_color2})`
+        : msg.message_color;
+    // For gradients, derive text color from the average luminance of both stops.
+    // For solid colors, derive directly.
+    const r1 = parseInt(msg.message_color.slice(1, 3), 16);
+    const g1 = parseInt(msg.message_color.slice(3, 5), 16);
+    const b1 = parseInt(msg.message_color.slice(5, 7), 16);
+    let avgHex = msg.message_color;
+    if (hasGradient) {
+        const r2 = parseInt(msg.message_color2.slice(1, 3), 16);
+        const g2 = parseInt(msg.message_color2.slice(3, 5), 16);
+        const b2 = parseInt(msg.message_color2.slice(5, 7), 16);
+        const toHex = (v) => Math.round(v).toString(16).padStart(2, '0');
+        avgHex = `#${toHex((r1 + r2) / 2)}${toHex((g1 + g2) / 2)}${toHex((b1 + b2) / 2)}`;
+    }
+    return { background: bg, color: contrastText(avgHex) };
+}
+
+function IconReply() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+            <polyline points="9 17 4 12 9 7" />
+            <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+        </svg>
+    );
+}
+
+function IconMore() {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <circle cx="12" cy="5" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="19" r="1.5" />
+        </svg>
+    );
+}
+
+function useSwipeReply(onReply, isMine) {
+    const ref = useRef(null);
+    const startX = useRef(0);
+    const currentX = useRef(0);
+    const swiping = useRef(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        // Swipe toward center: "theirs" swipes right, "mine" swipes left
+        const direction = isMine ? -1 : 1;
+        const threshold = 60;
+
+        function onTouchStart(e) {
+            startX.current = e.touches[0].clientX;
+            currentX.current = 0;
+            swiping.current = false;
+        }
+
+        function onTouchMove(e) {
+            const dx = (e.touches[0].clientX - startX.current) * direction;
+            if (dx < 0) { el.style.transform = ''; return; }
+            if (dx > 10) swiping.current = true;
+            const clamped = Math.min(dx, 80);
+            currentX.current = dx;
+            el.style.transform = `translateX(${clamped * direction}px)`;
+        }
+
+        function onTouchEnd() {
+            el.style.transition = 'transform 0.2s';
+            el.style.transform = '';
+            setTimeout(() => { el.style.transition = ''; }, 200);
+            if (swiping.current && currentX.current >= threshold) onReply();
+            swiping.current = false;
+        }
+
+        el.addEventListener('touchstart', onTouchStart, { passive: true });
+        el.addEventListener('touchmove', onTouchMove, { passive: true });
+        el.addEventListener('touchend', onTouchEnd);
+        return () => {
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend', onTouchEnd);
+        };
+    }, [onReply, isMine]);
+
+    return ref;
+}
+
+function scrollToMessage(id, feedEl) {
+    if (!feedEl) return;
+    const msgRow = feedEl.querySelector(`[data-msg-id="${id}"]`);
+    if (!msgRow) return;
+    msgRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function StreakHighlight({ targetRef }) {
+    const [dims, setDims] = useState(null);
+
+    useEffect(() => {
+        const el = targetRef.current;
+        if (!el) return;
+        const { width, height } = el.getBoundingClientRect();
+        setDims({ w: width, h: height });
+    }, [targetRef]);
+
+    if (!dims) return null;
+
+    const { w, h } = dims;
+    const r = 12;
+    // Exact perimeter of a rounded rect: 4 straight edges + 4 quarter-circle arcs
+    const perimeter = 2 * (w - 2 * r) + 2 * (h - 2 * r) + 2 * Math.PI * r;
+    const streak = perimeter * 0.18;
+    const gap = perimeter - streak;
+
+    return (
+        <svg
+            className={styles.streakSvg}
+            style={{ position: 'absolute', inset: -2, width: w + 4, height: h + 4, pointerEvents: 'none' }}
+        >
+            <defs>
+                <linearGradient id={`streak-g-${w|0}`} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="transparent" />
+                    <stop offset="20%" stopColor="#7dd3fc" stopOpacity="0.6" />
+                    <stop offset="50%" stopColor="#38bdf8" />
+                    <stop offset="80%" stopColor="#7dd3fc" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="transparent" />
+                </linearGradient>
+            </defs>
+            <rect
+                x="2" y="2" width={w} height={h}
+                rx={r} ry={r}
+                fill="none"
+                stroke={`url(#streak-g-${w|0})`}
+                strokeWidth="2"
+                strokeDasharray={`${streak} ${gap}`}
+                strokeLinecap="round"
+                className={styles.streakRect}
+                style={{ '--perimeter': perimeter }}
+            />
+        </svg>
+    );
+}
+
+function Message({ msg, isMine, isAdmin, onDelete, onReply, isFirst, isLast, feedRef, highlighted, onHighlight }) {
     const [confirming, setConfirming] = useState(false);
+    const [showTime, setShowTime] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const bubbleRef = useRef(null);
+    const menuRef = useRef(null);
+    const swipeRef = useSwipeReply(onReply, isMine);
 
     const canDelete = isMine || isAdmin;
 
+    useEffect(() => {
+        if (!menuOpen) return;
+        function close(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); }
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [menuOpen]);
+
+    const groupPos = isFirst && isLast ? '' : isFirst ? styles.groupFirst : isLast ? styles.groupLast : styles.groupMiddle;
+
     return (
-        <div className={`${styles.msg} ${isMine ? styles.mine : styles.theirs}`}>
+        <div ref={swipeRef} data-msg-id={msg.id} className={`${styles.msg} ${isMine ? styles.mine : styles.theirs} ${!isFirst ? styles.continuation : ''} ${groupPos}`}>
             {!isMine && (
-                <div className={styles.avatar}>
-                    {msg.avatar
-                        ? <img src={`/uploads/${msg.avatar}`} alt={msg.username} className={styles.avatarImg} />
-                        : <span className={styles.avatarInitial}>{msg.username[0].toUpperCase()}</span>
-                    }
-                </div>
+                isLast
+                    ? <div className={styles.avatar}>
+                        {msg.avatar
+                            ? <img src={`/uploads/${msg.avatar}`} alt={msg.username} className={styles.avatarImg} />
+                            : <span className={styles.avatarInitial}>{msg.username[0].toUpperCase()}</span>
+                        }
+                      </div>
+                    : <div className={styles.avatarSpacer} />
             )}
             <div className={styles.bubble}>
-                {!isMine && <span className={styles.sender}>{msg.username}</span>}
-                <p className={styles.text} style={!isMine && msg.message_color ? { background: msg.message_color2 && msg.message_color2 !== msg.message_color ? `linear-gradient(135deg, ${msg.message_color}, ${msg.message_color2})` : msg.message_color } : undefined}>{msg.content}</p>
-                <div className={styles.msgMeta}>
-                    <span className={styles.time}>{formatTime(msg.created_at)}</span>
-                    {canDelete && !confirming && (
-                        <button className={styles.deleteBtn} onClick={() => setConfirming(true)}>usuń</button>
-                    )}
-                    {confirming && (
-                        <span className={styles.confirmRow}>
-                            <button className={styles.confirmYes} onClick={() => onDelete(msg.id)}>tak</button>
-                            <button className={styles.confirmNo} onClick={() => setConfirming(false)}>nie</button>
-                        </span>
-                    )}
+                {!isMine && isFirst && <span className={styles.sender}>{msg.username}</span>}
+                {msg.reply_content && (
+                    <div
+                        className={styles.replyPreview}
+                        onClick={() => { scrollToMessage(msg.reply_to_id, feedRef?.current); onHighlight(msg.reply_to_id); }}
+                    >
+                        <span className={styles.replyAuthor}>{msg.reply_username}</span>
+                        <span className={styles.replyText}>{msg.reply_content.length > 80 ? msg.reply_content.slice(0, 80) + '...' : msg.reply_content}</span>
+                    </div>
+                )}
+                <div className={styles.textRow}>
+                    <div className={styles.textWrap} ref={bubbleRef}>
+                        <p
+                            className={styles.text}
+                            style={!isMine ? bubbleStyle(msg) : undefined}
+                            onClick={!isLast ? () => setShowTime(v => !v) : undefined}
+                        >{msg.content}</p>
+                        {highlighted && <StreakHighlight targetRef={bubbleRef} />}
+                    </div>
+                    <div className={styles.contextArea} ref={menuRef}>
+                        <button className={styles.contextBtn} onClick={() => setMenuOpen(v => !v)}>
+                            <IconMore />
+                        </button>
+                        {menuOpen && (
+                            <div className={`${styles.contextMenu} ${isMine ? styles.contextMenuMine : ''}`}>
+                                <button className={styles.contextMenuItem} onClick={() => { setMenuOpen(false); onReply(); }}>
+                                    <IconReply /> Odpowiedz
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
+                {(isLast || showTime) && (
+                    <div className={styles.msgMeta}>
+                        <span className={styles.time}>{formatTime(msg.created_at)}</span>
+                        {canDelete && !confirming && (
+                            <button className={styles.deleteBtn} onClick={() => setConfirming(true)}>usu\u0144</button>
+                        )}
+                        {confirming && (
+                            <span className={styles.confirmRow}>
+                                <button className={styles.confirmYes} onClick={() => onDelete(msg.id)}>tak</button>
+                                <button className={styles.confirmNo} onClick={() => setConfirming(false)}>nie</button>
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+
+const GROUP_THRESHOLD_MS = 30000;
 
 export default function ChatPage() {
     const { user } = useAuth();
     const isAdmin = Boolean(user?.is_admin);
     const [messages, setMessages] = useState([]);
     const [draft, setDraft] = useState('');
+    const [replyTo, setReplyTo] = useState(null);
+    const [highlightId, setHighlightId] = useState(null);
     const [hasMore, setHasMore] = useState(true);
     const lastIdRef = useRef(0);
     const firstIdRef = useRef(Infinity);
     const bottomRef = useRef(null);
+    const feedRef = useRef(null);
     const inputRef = useRef(null);
     const isFirstLoad = useRef(true);
+    const highlightTimer = useRef(null);
+
+    const triggerHighlight = useCallback((id) => {
+        clearTimeout(highlightTimer.current);
+        setHighlightId(id);
+        highlightTimer.current = setTimeout(() => setHighlightId(null), 2000);
+    }, []);
 
     const fetchMessages = useCallback(async () => {
         try {
@@ -112,13 +328,18 @@ export default function ChatPage() {
         const content = draft.trim();
         if (!content) return;
         setDraft('');
+        const currentReply = replyTo;
+        setReplyTo(null);
         try {
-            const { data } = await api.post('/chat', { content });
+            const payload = { content };
+            if (currentReply) payload.reply_to_id = currentReply.id;
+            const { data } = await api.post('/chat', payload);
             lastIdRef.current = data.id;
             if (firstIdRef.current === Infinity) firstIdRef.current = data.id;
             setMessages(prev => [...prev, data]);
         } catch {
             setDraft(content);
+            setReplyTo(currentReply);
         }
         inputRef.current?.focus();
     }
@@ -132,7 +353,9 @@ export default function ChatPage() {
         }
     }
 
-    // Group messages by day for date separators
+    // Group messages by day for date separators, then annotate consecutive
+    // messages from the same user sent within GROUP_THRESHOLD_MS with
+    // isFirst / isLast flags so the renderer can collapse avatars and timestamps.
     const grouped = [];
     let lastDay = null;
     for (const msg of messages) {
@@ -144,9 +367,27 @@ export default function ChatPage() {
         grouped.push({ type: 'message', msg });
     }
 
+    // Annotate isFirst / isLast on message entries
+    for (let i = 0; i < grouped.length; i++) {
+        const item = grouped[i];
+        if (item.type !== 'message') continue;
+        const prev = i > 0 && grouped[i - 1].type === 'message' ? grouped[i - 1] : null;
+        const next = i < grouped.length - 1 && grouped[i + 1].type === 'message' ? grouped[i + 1] : null;
+
+        const sameAsPrev = prev
+            && prev.msg.user_id === item.msg.user_id
+            && (new Date(item.msg.created_at) - new Date(prev.msg.created_at)) <= GROUP_THRESHOLD_MS;
+        const sameAsNext = next
+            && next.msg.user_id === item.msg.user_id
+            && (new Date(next.msg.created_at) - new Date(item.msg.created_at)) <= GROUP_THRESHOLD_MS;
+
+        item.isFirst = !sameAsPrev;
+        item.isLast = !sameAsNext;
+    }
+
     return (
         <div className={styles.page}>
-            <div className={styles.feed}>
+            <div className={styles.feed} ref={feedRef}>
                 {hasMore && messages.length >= 50 && (
                     <button className={styles.loadEarlier} onClick={loadEarlier}>
                         Wczytaj wcześniejsze wiadomości
@@ -164,17 +405,30 @@ export default function ChatPage() {
                             isMine={item.msg.user_id === user?.id}
                             isAdmin={isAdmin}
                             onDelete={handleDelete}
+                            onReply={() => { setReplyTo(item.msg); inputRef.current?.focus(); }}
+                            isFirst={item.isFirst}
+                            isLast={item.isLast}
+                            feedRef={feedRef}
                           />
                 )}
                 <div ref={bottomRef} />
             </div>
+            {replyTo && (
+                <div className={styles.replyBar}>
+                    <div className={styles.replyBarContent}>
+                        <span className={styles.replyBarAuthor}>{replyTo.username}</span>
+                        <span className={styles.replyBarText}>{replyTo.content.length > 60 ? replyTo.content.slice(0, 60) + '...' : replyTo.content}</span>
+                    </div>
+                    <button className={styles.replyBarClose} onClick={() => setReplyTo(null)}>&times;</button>
+                </div>
+            )}
             <form className={styles.composer} onSubmit={handleSend}>
                 <input
                     ref={inputRef}
                     className={styles.input}
                     value={draft}
                     onChange={e => setDraft(e.target.value)}
-                    placeholder="Napisz wiadomość…"
+                    placeholder={replyTo ? 'Odpowiedz...' : 'Napisz wiadomość…'}
                     maxLength={500}
                     autoComplete="off"
                 />

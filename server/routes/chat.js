@@ -14,21 +14,27 @@ router.get('/', (req, res) => {
 
     let rows;
     if (before > 0) {
-        // Paginate backwards: return 50 messages older than `before`, newest-first
-        // then reverse so the feed renders in ascending order.
         rows = db.prepare(`
-            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2
+            SELECT m.id, m.content, m.created_at, m.reply_to_id,
+                   u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2,
+                   rm.content AS reply_content, ru.username AS reply_username
             FROM messages m
             JOIN users u ON u.id = m.user_id
+            LEFT JOIN messages rm ON rm.id = m.reply_to_id
+            LEFT JOIN users ru ON ru.id = rm.user_id
             WHERE m.id < ?
             ORDER BY m.id DESC
             LIMIT 50
         `).all(before).reverse();
     } else {
         rows = db.prepare(`
-            SELECT m.id, m.content, m.created_at, u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2
+            SELECT m.id, m.content, m.created_at, m.reply_to_id,
+                   u.id AS user_id, u.username, u.avatar, u.message_color, u.message_color2,
+                   rm.content AS reply_content, ru.username AS reply_username
             FROM messages m
             JOIN users u ON u.id = m.user_id
+            LEFT JOIN messages rm ON rm.id = m.reply_to_id
+            LEFT JOIN users ru ON ru.id = rm.user_id
             WHERE m.id > ?
             ORDER BY m.id ASC
             LIMIT 50
@@ -37,20 +43,30 @@ router.get('/', (req, res) => {
     return res.json(rows);
 });
 
-// POST /api/chat  { content }
+// POST /api/chat  { content, reply_to_id? }
 router.post('/', (req, res) => {
-    const { content } = req.body;
+    const { content, reply_to_id } = req.body;
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(422).json({ error: 'Treść wiadomości jest wymagana' });
     }
     if (content.trim().length > 500) {
         return res.status(422).json({ error: 'Wiadomość nie może przekraczać 500 znaków' });
     }
+
+    const replyId = reply_to_id ? parseInt(reply_to_id, 10) || null : null;
     const row = db.prepare(
-        'INSERT INTO messages (user_id, content) VALUES (?, ?) RETURNING id, content, created_at'
-    ).get(req.user.id, content.trim());
+        'INSERT INTO messages (user_id, content, reply_to_id) VALUES (?, ?, ?) RETURNING id, content, created_at, reply_to_id'
+    ).get(req.user.id, content.trim(), replyId);
 
     const sender = db.prepare('SELECT avatar, message_color, message_color2 FROM users WHERE id = ?').get(req.user.id);
+
+    let reply_content = null;
+    let reply_username = null;
+    if (replyId) {
+        const orig = db.prepare('SELECT m.content, u.username FROM messages m JOIN users u ON u.id = m.user_id WHERE m.id = ?').get(replyId);
+        if (orig) { reply_content = orig.content; reply_username = orig.username; }
+    }
+
     return res.status(201).json({
         ...row,
         user_id: req.user.id,
@@ -58,6 +74,8 @@ router.post('/', (req, res) => {
         avatar: sender?.avatar || null,
         message_color: sender?.message_color || '#1e3f6b',
         message_color2: sender?.message_color2 || sender?.message_color || '#1e3f6b',
+        reply_content,
+        reply_username,
     });
 });
 

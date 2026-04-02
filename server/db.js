@@ -26,6 +26,7 @@ addColumn('ALTER TABLE users ADD COLUMN avatar TEXT');
 addColumn('ALTER TABLE users ADD COLUMN attendance_offset INTEGER NOT NULL DEFAULT 0');
 addColumn('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0');
 addColumn("ALTER TABLE users ADD COLUMN message_color TEXT NOT NULL DEFAULT '#1e3f6b'");
+addColumn('ALTER TABLE messages ADD COLUMN reply_to_id INTEGER REFERENCES messages(id) ON DELETE SET NULL');
 addColumn("ALTER TABLE users ADD COLUMN message_color2 TEXT NOT NULL DEFAULT '#1e3f6b'");
 
 addColumn('ALTER TABLE time_slots ADD COLUMN weekend_only INTEGER NOT NULL DEFAULT 0');
