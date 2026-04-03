@@ -130,7 +130,13 @@
     z-index: 0;
 }
 
-.replyPreview:hover {
+@media (hover: hover) {                                                                                             
+      .replyPreview:hover {                                                                                           
+      background: var(--surface2);                                                                                
+    }                                                                                                               
+}                                                                                                                   
+                                                                                                            
+replyPreview:active {                                                                                              
     background: var(--surface2);
 }
 
