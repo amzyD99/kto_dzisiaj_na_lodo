@@ -1,12 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const db = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { issueToken } = require('../lib/token');
+const { SALT_ROUNDS, DEFAULT_MESSAGE_COLOR } = require('../lib/constants');
 
 const router = express.Router();
-const SALT_ROUNDS = 10;
 const TOKEN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 // Derives a registration token from the current 15-minute window index using
@@ -28,14 +28,6 @@ router.get('/register-token', requireAuth, requireAdmin, (req, res) => {
     const msUntilRotation = TOKEN_WINDOW_MS - (Date.now() % TOKEN_WINDOW_MS);
     res.json({ token, secondsUntilRotation: Math.ceil(msUntilRotation / 1000) });
 });
-
-function issueToken(user) {
-    return jwt.sign(
-        { id: user.id, username: user.username, is_admin: user.is_admin ? 1 : 0 },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-}
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -59,7 +51,7 @@ router.post('/register', async (req, res) => {
         );
         const user = stmt.get(username.trim(), hash);
         const full = db.prepare('SELECT message_color, message_color2 FROM users WHERE id = ?').get(user.id);
-        return res.status(201).json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: null, is_admin: 0, message_color: full?.message_color || '#1e3f6b', message_color2: full?.message_color2 || '#1e3f6b' } });
+        return res.status(201).json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: null, is_admin: 0, message_color: full?.message_color || DEFAULT_MESSAGE_COLOR, message_color2: full?.message_color2 || DEFAULT_MESSAGE_COLOR } });
     } catch (err) {
         if (err.message.includes('UNIQUE')) {
             return res.status(409).json({ error: 'Nazwa użytkownika jest już zajęta' });
@@ -86,7 +78,7 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'Nieprawidłowe dane logowania' });
     }
 
-    return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0, message_color: user.message_color || '#1e3f6b', message_color2: user.message_color2 || user.message_color || '#1e3f6b' } });
+    return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0, message_color: user.message_color || DEFAULT_MESSAGE_COLOR, message_color2: user.message_color2 || user.message_color || DEFAULT_MESSAGE_COLOR } });
 });
 
 module.exports = router;

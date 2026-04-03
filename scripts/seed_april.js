@@ -2,7 +2,7 @@ const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
 const path = require('path');
 
-const db = new Database(path.join(__dirname, 'ice_rink.db'));
+const db = new Database(path.join(__dirname, '../server/ice_rink.db'));
 
 const TARGET_DATE = '2026-04-01';
 const SLOT_IDS = [1, 2, 3, 4];

@@ -3,13 +3,8 @@ import {
     BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip, Customized,
 } from 'recharts';
 import api from '../api.js';
+import { MONTH_NAMES, DOW_LABELS } from '../utils/locale.js';
 import styles from './AnalyticsPage.module.css';
-
-const MONTH_NAMES = [
-    'Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec',
-    'Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień',
-];
-const DOW_LABELS = { 1:'Pon', 2:'Wt', 3:'Śr', 4:'Czw', 5:'Pt', 6:'Sob', 7:'Nd' };
 const SLOT_GRADIENTS = [
     { top: '#38bdf8', bottom: '#0369a1' },
     { top: '#818cf8', bottom: '#4338ca' },

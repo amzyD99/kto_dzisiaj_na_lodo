@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { MONTH_NAMES, DAY_HEADERS } from '../utils/locale.js';
+import { toIso } from '../utils/date.js';
 import styles from './MonthCalendar.module.css';
-
-const MONTH_NAMES = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
-    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
-const DAY_HEADERS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
-
-function toIso(year, month, day) {
-    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
 
 export default function MonthCalendar({ selectedDate, onSelect }) {
     const today = new Date();

@@ -1,9 +1,5 @@
-import React from 'react';
 import SlotCard from './SlotCard.jsx';
 import styles from './DayColumn.module.css';
-
-const DAY_NAMES = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-const MONTH_NAMES = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
 
 export default function DayColumn({ date, slots, attendanceMap, currentUserId, onToggle }) {
     const d = new Date(date + 'T00:00:00');

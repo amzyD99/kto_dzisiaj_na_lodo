@@ -1,17 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import DayColumn from '../components/DayColumn.jsx';
 import AttendanceChart from '../components/AttendanceChart.jsx';
 import MonthCalendar from '../components/MonthCalendar.jsx';
 import AnnouncementBoard from '../components/AnnouncementBoard.jsx';
+import { todayIso } from '../utils/date.js';
 import styles from './SchedulePage.module.css';
-
-function todayIso() {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 function isWeekend(dateStr) {
     const day = new Date(dateStr + 'T00:00:00').getDay();

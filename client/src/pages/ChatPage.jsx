@@ -1,27 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
+import { formatTime, formatDay } from '../utils/date.js';
+import { contrastText, averageHex } from '../utils/color.js';
 import styles from './ChatPage.module.css';
 
 const POLL_INTERVAL_MS = 3000;
-
-function formatTime(iso) {
-    return new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDay(iso) {
-    return new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
-}
-
-// Returns a contrasting text color (dark or light) for a given hex background.
-// Uses the sRGB relative luminance formula (ITU-R BT.709 coefficients).
-function contrastText(hex) {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return L > 0.45 ? '#0f172a' : '#e2e8f0';
-}
 
 function bubbleStyle(msg) {
     if (!msg.message_color) return undefined;
@@ -29,20 +13,8 @@ function bubbleStyle(msg) {
     const bg = hasGradient
         ? `linear-gradient(135deg, ${msg.message_color}, ${msg.message_color2})`
         : msg.message_color;
-    // For gradients, derive text color from the average luminance of both stops.
-    // For solid colors, derive directly.
-    const r1 = parseInt(msg.message_color.slice(1, 3), 16);
-    const g1 = parseInt(msg.message_color.slice(3, 5), 16);
-    const b1 = parseInt(msg.message_color.slice(5, 7), 16);
-    let avgHex = msg.message_color;
-    if (hasGradient) {
-        const r2 = parseInt(msg.message_color2.slice(1, 3), 16);
-        const g2 = parseInt(msg.message_color2.slice(3, 5), 16);
-        const b2 = parseInt(msg.message_color2.slice(5, 7), 16);
-        const toHex = (v) => Math.round(v).toString(16).padStart(2, '0');
-        avgHex = `#${toHex((r1 + r2) / 2)}${toHex((g1 + g2) / 2)}${toHex((b1 + b2) / 2)}`;
-    }
-    return { background: bg, color: contrastText(avgHex) };
+    const avgColor = hasGradient ? averageHex(msg.message_color, msg.message_color2) : msg.message_color;
+    return { background: bg, color: contrastText(avgColor) };
 }
 
 function IconReply() {

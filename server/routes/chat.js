@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { DEFAULT_MESSAGE_COLOR } = require('../lib/constants');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -72,8 +73,8 @@ router.post('/', (req, res) => {
         user_id: req.user.id,
         username: req.user.username,
         avatar: sender?.avatar || null,
-        message_color: sender?.message_color || '#1e3f6b',
-        message_color2: sender?.message_color2 || sender?.message_color || '#1e3f6b',
+        message_color: sender?.message_color || DEFAULT_MESSAGE_COLOR,
+        message_color2: sender?.message_color2 || sender?.message_color || DEFAULT_MESSAGE_COLOR,
         reply_content,
         reply_username,
     });

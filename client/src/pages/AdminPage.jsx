@@ -2,11 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
+import { formatDate } from '../utils/date.js';
 import styles from './AdminPage.module.css';
-
-function formatDate(iso) {
-    return new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
-}
 
 function UserRow({ user, currentUserId, onDeleted }) {
     const [mode, setMode] = useState(null); // null | 'reset' | 'delete'

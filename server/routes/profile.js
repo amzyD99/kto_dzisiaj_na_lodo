@@ -1,21 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { issueToken } = require('../lib/token');
+const { SALT_ROUNDS, DEFAULT_MESSAGE_COLOR } = require('../lib/constants');
 
 const router = express.Router();
 router.use(requireAuth);
-
-const SALT_ROUNDS = 10;
-
-function issueToken(user) {
-    return jwt.sign(
-        { id: user.id, username: user.username, is_admin: user.is_admin ? 1 : 0 },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-}
 
 // PUT /api/me/username  { username }
 router.put('/username', (req, res) => {
@@ -30,7 +21,7 @@ router.put('/username', (req, res) => {
         ).get(username.trim(), req.user.id);
 
         const full = db.prepare('SELECT message_color, message_color2 FROM users WHERE id = ?').get(user.id);
-        return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0, message_color: full?.message_color || '#1e3f6b', message_color2: full?.message_color2 || full?.message_color || '#1e3f6b' } });
+        return res.json({ token: issueToken(user), user: { id: user.id, username: user.username, avatar: user.avatar || null, is_admin: user.is_admin || 0, message_color: full?.message_color || DEFAULT_MESSAGE_COLOR, message_color2: full?.message_color2 || full?.message_color || DEFAULT_MESSAGE_COLOR } });
     } catch (err) {
         if (err.message.includes('UNIQUE')) {
             return res.status(409).json({ error: 'Nazwa użytkownika jest już zajęta' });

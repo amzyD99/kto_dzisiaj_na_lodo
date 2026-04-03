@@ -29,7 +29,7 @@ const upload = multer({
 // POST /api/avatar  (multipart, field name: "avatar")
 router.post('/', requireAuth, upload.single('avatar'), (req, res) => {
     if (!req.file) {
-        return res.status(422).json({ error: 'No valid image file provided' });
+        return res.status(422).json({ error: 'Nie przesłano prawidłowego pliku obrazu' });
     }
 
     // Update the database first. Only delete the old file after the DB write

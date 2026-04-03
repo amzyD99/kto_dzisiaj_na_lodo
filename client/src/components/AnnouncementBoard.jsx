@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
+import { formatDate } from '../utils/date.js';
 import styles from './AnnouncementBoard.module.css';
-
-function formatDate(iso) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
-}
 
 function AnnouncementItem({ item, isAdmin, onUpdated, onDeleted }) {
     const [editing, setEditing] = useState(false);

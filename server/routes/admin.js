@@ -2,11 +2,10 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { SALT_ROUNDS } = require('../lib/constants');
 
 const router = express.Router();
 router.use(requireAuth, requireAdmin);
-
-const SALT_ROUNDS = 10;
 
 // GET /api/admin/users  — list all users
 router.get('/users', (req, res) => {

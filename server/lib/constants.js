@@ -1,0 +1,4 @@
+const SALT_ROUNDS = 10;
+const DEFAULT_MESSAGE_COLOR = '#1e3f6b';
+
+module.exports = { SALT_ROUNDS, DEFAULT_MESSAGE_COLOR };

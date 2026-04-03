@@ -2,15 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
+import { contrastText, averageHex } from '../utils/color.js';
 import styles from './ProfilePage.module.css';
-
-function contrastText(hex) {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return L > 0.45 ? '#0f172a' : '#e2e8f0';
-}
 
 const COLOR_PALETTE = [
     '#f87171', '#fb923c', '#17b11f', '#a3e635',
@@ -138,12 +131,7 @@ export default function ProfilePage() {
         }
     }
 
-    let previewColorBase = messageColor;
-    if (gradientEnabled) {
-        const toHex = (v) => Math.round(v).toString(16).padStart(2, '0');
-        const avg = (c1, c2, i) => (parseInt(c1.slice(i, i + 2), 16) + parseInt(c2.slice(i, i + 2), 16)) / 2;
-        previewColorBase = `#${toHex(avg(messageColor, messageColor2, 1))}${toHex(avg(messageColor, messageColor2, 3))}${toHex(avg(messageColor, messageColor2, 5))}`;
-    }
+    const previewColorBase = gradientEnabled ? averageHex(messageColor, messageColor2) : messageColor;
     const previewTextColor = contrastText(previewColorBase);
 
     return (
