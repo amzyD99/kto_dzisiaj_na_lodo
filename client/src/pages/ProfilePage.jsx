@@ -4,6 +4,14 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api.js';
 import styles from './ProfilePage.module.css';
 
+function contrastText(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return L > 0.45 ? '#0f172a' : '#e2e8f0';
+}
+
 const COLOR_PALETTE = [
     '#f87171', '#fb923c', '#17b11f', '#a3e635',
     '#34d399', '#22d3ee', '#2b65ac', '#a78bfa',
@@ -130,11 +138,19 @@ export default function ProfilePage() {
         }
     }
 
+    let previewColorBase = messageColor;
+    if (gradientEnabled) {
+        const toHex = (v) => Math.round(v).toString(16).padStart(2, '0');
+        const avg = (c1, c2, i) => (parseInt(c1.slice(i, i + 2), 16) + parseInt(c2.slice(i, i + 2), 16)) / 2;
+        previewColorBase = `#${toHex(avg(messageColor, messageColor2, 1))}${toHex(avg(messageColor, messageColor2, 3))}${toHex(avg(messageColor, messageColor2, 5))}`;
+    }
+    const previewTextColor = contrastText(previewColorBase);
+
     return (
         <div className={styles.page}>
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={() => navigate('/')}>← Powrót</button>
-                {user?.is_admin && (
+                {!!user?.is_admin && (
                     <button className={styles.manageBtn} onClick={() => navigate('/admin')}>Zarządzaj użytkownikami</button>
                 )}
             </div>
@@ -163,7 +179,7 @@ export default function ProfilePage() {
                 <section className={styles.card}>
                     <h2 className={styles.sectionTitle}>Kolor wiadomości</h2>
                     <div className={styles.colorPreview} style={{ background: gradientEnabled ? `linear-gradient(135deg, ${messageColor}, ${messageColor2})` : messageColor }}>
-                        <span style={{ color: '#e2e8f0', fontSize: '0.78rem', opacity: 0.85 }}>Podgląd</span>
+                        <span style={{ color: previewTextColor, fontSize: '0.78rem' }}>Podgląd</span>
                     </div>
                     <div className={styles.gradientSection}>
                         <div>
@@ -233,7 +249,7 @@ export default function ProfilePage() {
                     </div>
                 </section>
 
-                {user?.is_admin && (
+                {!!user?.is_admin && (
                     <section className={styles.card}>
                         <h2 className={styles.sectionTitle}>Token rejestracji</h2>
                         <div className={styles.regTokenRow}>

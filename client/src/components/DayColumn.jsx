@@ -8,8 +8,12 @@ const MONTH_NAMES = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec
 export default function DayColumn({ date, slots, attendanceMap, currentUserId, onToggle }) {
     const d = new Date(date + 'T00:00:00');
     const todayISO = new Date().toISOString().slice(0, 10);
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 13);
+    const maxISO = maxDate.toISOString().slice(0, 10);
     const isToday = date === todayISO;
     const isPast = date < todayISO;
+    const isOutOfScope = date > maxISO;
 
     return (
         <div className={`${styles.column} ${isToday ? styles.today : ''}`}>
@@ -24,7 +28,7 @@ export default function DayColumn({ date, slots, attendanceMap, currentUserId, o
                             slot={slot}
                             users={users}
                             isMarked={isMarked}
-                            readonly={isPast}
+                            readonly={isPast || isOutOfScope}
                             onToggle={() => onToggle(date, slot.id)}
                         />
                     );

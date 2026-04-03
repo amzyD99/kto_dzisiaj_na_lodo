@@ -118,8 +118,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.05rem;
-    padding: 0.45rem 0.75rem 1rem;
-    margin-bottom: -0.6rem;
+    padding: 0.45rem 0.55rem 1.4rem;
+    margin-bottom: -1rem;
     border-left: 2px solid var(--accent);
     border-radius: 10px;
     background: var(--surface);
@@ -259,7 +259,7 @@ replyPreview:active {
 
 .replyBarAuthor {
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--accent);
 }
 

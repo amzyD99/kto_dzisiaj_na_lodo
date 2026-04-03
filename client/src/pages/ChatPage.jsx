@@ -290,7 +290,11 @@ export default function ChatPage() {
             lastIdRef.current = data[data.length - 1].id;
             if (firstIdRef.current === Infinity) firstIdRef.current = data[0].id;
             localStorage.setItem('chat_latest_id', lastIdRef.current);
-            setMessages(prev => [...prev, ...data]);
+            setMessages(prev => {
+                const existingIds = new Set(prev.map(m => m.id));
+                const newMsgs = data.filter(m => !existingIds.has(m.id));
+                return newMsgs.length > 0 ? [...prev, ...newMsgs] : prev;
+            });
         } catch {
             // non-critical polling failure
         }
