@@ -123,6 +123,7 @@ function scrollToMessage(id, feedEl) {
 
 function StreakHighlight({ targetRef }) {
     const [dims, setDims] = useState(null);
+    const rectRef = useRef(null);
 
     useEffect(() => {
         const el = targetRef.current;
@@ -131,11 +132,26 @@ function StreakHighlight({ targetRef }) {
         setDims({ w: width, h: height });
     }, [targetRef]);
 
+    // Drive stroke-dashoffset via Web Animations API so the perimeter
+    // value is fed directly as a JS number -- avoids the browser
+    // incompatibilities of using calc() with unitless custom properties
+    // inside @keyframes.
+    useEffect(() => {
+        if (!dims || !rectRef.current) return;
+        const { w, h } = dims;
+        const r = 12;
+        const perimeter = 2 * (w - 2 * r) + 2 * (h - 2 * r) + 2 * Math.PI * r;
+        const anim = rectRef.current.animate(
+            [{ strokeDashoffset: 0 }, { strokeDashoffset: -perimeter }],
+            { duration: 1200, iterations: Infinity, easing: 'linear' }
+        );
+        return () => anim.cancel();
+    }, [dims]);
+
     if (!dims) return null;
 
     const { w, h } = dims;
     const r = 12;
-    // Exact perimeter of a rounded rect: 4 straight edges + 4 quarter-circle arcs
     const perimeter = 2 * (w - 2 * r) + 2 * (h - 2 * r) + 2 * Math.PI * r;
     const streak = perimeter * 0.18;
     const gap = perimeter - streak;
@@ -145,25 +161,15 @@ function StreakHighlight({ targetRef }) {
             className={styles.streakSvg}
             style={{ position: 'absolute', inset: -2, width: w + 4, height: h + 4, pointerEvents: 'none' }}
         >
-            <defs>
-                <linearGradient id={`streak-g-${w|0}`} x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="transparent" />
-                    <stop offset="20%" stopColor="#7dd3fc" stopOpacity="0.6" />
-                    <stop offset="50%" stopColor="#38bdf8" />
-                    <stop offset="80%" stopColor="#7dd3fc" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="transparent" />
-                </linearGradient>
-            </defs>
             <rect
+                ref={rectRef}
                 x="2" y="2" width={w} height={h}
                 rx={r} ry={r}
                 fill="none"
-                stroke={`url(#streak-g-${w|0})`}
+                stroke="#38bdf8"
                 strokeWidth="2"
                 strokeDasharray={`${streak} ${gap}`}
                 strokeLinecap="round"
-                className={styles.streakRect}
-                style={{ '--perimeter': perimeter }}
             />
         </svg>
     );
@@ -237,7 +243,7 @@ function Message({ msg, isMine, isAdmin, onDelete, onReply, isFirst, isLast, fee
                     <div className={styles.msgMeta}>
                         <span className={styles.time}>{formatTime(msg.created_at)}</span>
                         {canDelete && !confirming && (
-                            <button className={styles.deleteBtn} onClick={() => setConfirming(true)}>usu\u0144</button>
+                            <button className={styles.deleteBtn} onClick={() => setConfirming(true)}>usuń</button>
                         )}
                         {confirming && (
                             <span className={styles.confirmRow}>
@@ -268,6 +274,7 @@ export default function ChatPage() {
     const feedRef = useRef(null);
     const inputRef = useRef(null);
     const isFirstLoad = useRef(true);
+    const initialScrollDone = useRef(false);
     const highlightTimer = useRef(null);
 
     const triggerHighlight = useCallback((id) => {
@@ -294,6 +301,11 @@ export default function ChatPage() {
         localStorage.setItem('chat_last_seen_id', localStorage.getItem('chat_latest_id') || '0');
         fetchMessages().then(() => {
             isFirstLoad.current = false;
+            // Wait for React to commit the DOM update before scrolling
+            requestAnimationFrame(() => {
+                bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+                initialScrollDone.current = true;
+            });
             localStorage.setItem('chat_last_seen_id', String(lastIdRef.current));
         });
         const id = setInterval(() => {
@@ -305,9 +317,8 @@ export default function ChatPage() {
     }, [fetchMessages]);
 
     useEffect(() => {
-        if (messages.length > 0 && isFirstLoad.current === false) {
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (messages.length === 0 || !initialScrollDone.current) return;
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages.length]);
 
     async function loadEarlier() {
@@ -409,6 +420,8 @@ export default function ChatPage() {
                             isFirst={item.isFirst}
                             isLast={item.isLast}
                             feedRef={feedRef}
+                            highlighted={highlightId === item.msg.id}
+                            onHighlight={triggerHighlight}
                           />
                 )}
                 <div ref={bottomRef} />
