@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
     const fetchRegToken = useCallback(async () => {
         try {
-            const { data } = await api.get('/auth/register-token');
+            const { data } = await api.post('/auth/register-token');
             setRegToken(data.token);
             setRegTokenSeconds(data.secondsUntilRotation);
         } catch {

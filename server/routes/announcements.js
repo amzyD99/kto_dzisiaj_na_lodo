@@ -23,6 +23,9 @@ router.post('/', requireAdmin, (req, res) => {
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(422).json({ error: 'Treść ogłoszenia jest wymagana' });
     }
+    if (content.trim().length > 2000) {
+        return res.status(422).json({ error: 'Treść ogłoszenia nie może przekraczać 2000 znaków' });
+    }
     const row = db.prepare(
         'INSERT INTO announcements (content, author_id) VALUES (?, ?) RETURNING id, content, created_at, updated_at'
     ).get(content.trim(), req.user.id);
@@ -34,6 +37,9 @@ router.put('/:id', requireAdmin, (req, res) => {
     const { content } = req.body;
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(422).json({ error: 'Treść ogłoszenia jest wymagana' });
+    }
+    if (content.trim().length > 2000) {
+        return res.status(422).json({ error: 'Treść ogłoszenia nie może przekraczać 2000 znaków' });
     }
     const row = db.prepare(`
         UPDATE announcements

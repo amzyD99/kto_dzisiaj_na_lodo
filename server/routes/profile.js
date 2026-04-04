@@ -23,6 +23,9 @@ router.put('/username', (req, res) => {
     if (!username || typeof username !== 'string' || username.trim().length < 2) {
         return res.status(422).json({ error: 'Nazwa użytkownika musi mieć co najmniej 2 znaki' });
     }
+    if (username.trim().length > 32) {
+        return res.status(422).json({ error: 'Nazwa użytkownika nie może przekraczać 32 znaków' });
+    }
 
     try {
         const user = db.prepare(

@@ -1,9 +1,19 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
+
+// Limit each IP to 30 new messages per minute to prevent chat spam.
+const chatPostLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Zbyt wiele wiadomości. Spróbuj ponownie za chwilę.' },
+});
 
 // GET /api/chat?after=<id>&before=<id>
 // Returns up to 50 messages. ?after=ID fetches newer messages (polling).
@@ -44,7 +54,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /api/chat  { content, reply_to_id? }
-router.post('/', (req, res) => {
+router.post('/', chatPostLimiter, (req, res) => {
     const { content, reply_to_id } = req.body;
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(422).json({ error: 'Treść wiadomości jest wymagana' });

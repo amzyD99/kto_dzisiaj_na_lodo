@@ -22,8 +22,10 @@ function getRegistrationToken() {
         .toUpperCase();
 }
 
-// GET /api/auth/register-token  — admin only
-router.get('/register-token', requireAuth, requireAdmin, (req, res) => {
+// POST /api/auth/register-token  — admin only
+// Using POST so the response body (sensitive token) is not cached or logged
+// by proxies/access-log configurations that record GET response bodies.
+router.post('/register-token', requireAuth, requireAdmin, (req, res) => {
     const token = getRegistrationToken();
     const msUntilRotation = TOKEN_WINDOW_MS - (Date.now() % TOKEN_WINDOW_MS);
     res.json({ token, secondsUntilRotation: Math.ceil(msUntilRotation / 1000) });
@@ -43,6 +45,9 @@ router.post('/register', async (req, res) => {
 
     if (!username || typeof username !== 'string' || username.trim().length < 2) {
         return res.status(422).json({ error: 'Nazwa użytkownika musi mieć co najmniej 2 znaki' });
+    }
+    if (username.trim().length > 32) {
+        return res.status(422).json({ error: 'Nazwa użytkownika nie może przekraczać 32 znaków' });
     }
     if (!password || typeof password !== 'string' || password.length < 6) {
         return res.status(422).json({ error: 'Hasło musi mieć co najmniej 6 znaków' });

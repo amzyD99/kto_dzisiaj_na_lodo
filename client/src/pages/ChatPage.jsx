@@ -66,9 +66,13 @@ function IconMore() {
 
 function useSwipeReply(onReply, isMine) {
     const ref = useRef(null);
+    const onReplyRef = useRef(onReply);
     const startX = useRef(0);
     const currentX = useRef(0);
     const swiping = useRef(false);
+
+    // Keep the callback ref current without re-registering DOM listeners.
+    useEffect(() => { onReplyRef.current = onReply; }, [onReply]);
 
     useEffect(() => {
         const el = ref.current;
@@ -87,7 +91,11 @@ function useSwipeReply(onReply, isMine) {
         function onTouchMove(e) {
             const dx = (e.touches[0].clientX - startX.current) * direction;
             if (dx < 0) { el.style.transform = ''; return; }
-            if (dx > 10) swiping.current = true;
+            if (dx > 10) {
+                swiping.current = true;
+                // Prevent vertical page scroll while a horizontal swipe is in progress.
+                e.preventDefault();
+            }
             const clamped = Math.min(dx, 80);
             currentX.current = dx;
             el.style.transform = `translateX(${clamped * direction}px)`;
@@ -97,19 +105,20 @@ function useSwipeReply(onReply, isMine) {
             el.style.transition = 'transform 0.2s';
             el.style.transform = '';
             setTimeout(() => { el.style.transition = ''; }, 200);
-            if (swiping.current && currentX.current >= threshold) onReply();
+            if (swiping.current && currentX.current >= threshold) onReplyRef.current();
             swiping.current = false;
         }
 
         el.addEventListener('touchstart', onTouchStart, { passive: true });
-        el.addEventListener('touchmove', onTouchMove, { passive: true });
+        // Non-passive so preventDefault() can suppress page scroll during horizontal swipe.
+        el.addEventListener('touchmove', onTouchMove, { passive: false });
         el.addEventListener('touchend', onTouchEnd);
         return () => {
             el.removeEventListener('touchstart', onTouchStart);
             el.removeEventListener('touchmove', onTouchMove);
             el.removeEventListener('touchend', onTouchEnd);
         };
-    }, [onReply, isMine]);
+    }, [isMine]); // onReply intentionally omitted — kept current via onReplyRef
 
     return ref;
 }
