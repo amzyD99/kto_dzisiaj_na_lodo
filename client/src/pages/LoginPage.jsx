@@ -30,7 +30,7 @@ export default function LoginPage() {
     return (
         <div className={styles.wrapper}>
             <form className={styles.card} onSubmit={handleSubmit}>
-                <h1 className={styles.title}>Grafik Lodowiska</h1>
+                <h1 className={styles.title}>kto dzisiaj na lodo</h1>
                 <h2 className={styles.subtitle}>Zaloguj się</h2>
                 {error && <p className={styles.error}>{error}</p>}
                 <label className={styles.label}>
